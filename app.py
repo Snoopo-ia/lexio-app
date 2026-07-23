@@ -4,7 +4,7 @@ from PIL import Image
 from google import genai
 
 # ---------------------------------------------------------
-# Configuración de la página y Estilo Premium
+# Configuración de la página y Estilo Premium (Dark Mode)
 # ---------------------------------------------------------
 st.set_page_config(
     page_title="LEXIO — Auditoría Inteligente de Facturas",
@@ -12,7 +12,7 @@ st.set_page_config(
     layout="centered"
 )
 
-# Inyección de CSS para diseño personalizado (Dark Mode Premium)
+# Inyección de CSS para diseño personalizado
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
@@ -93,10 +93,10 @@ st.markdown("""
 api_key = os.environ.get("GEMINI_API_KEY")
 
 if not api_key:
-    st.error("⚠️ Error de configuración: Falta la clave API de Gemini.")
+    st.error("⚠️ Error de configuración: Falta la clave API de Gemini en los Secretos.")
     st.stop()
 
-# Inicializar cliente oficial de Google
+# Inicializar cliente
 client = genai.Client(api_key=api_key)
 
 # ---------------------------------------------------------
@@ -131,33 +131,53 @@ if uploaded_file is not None:
     
     if analyze_btn:
         with st.spinner("Lexio está escaneando ítems, impuestos y letra chica..."):
-            try:
-                prompt = """
-                Actúa como un auditor experto en consumo y derecho del consumidor en Argentina (Ley 24.240).
-                Analiza profesionalmente la imagen de la factura adjunta y genera un informe estructurado en Markdown.
-                
-                Usa títulos claros (##) y viñetas. Estructura la respuesta EXACTAMENTE así:
+            
+            prompt = """
+            Actúa como un auditor experto en consumo y derecho del consumidor en Argentina (Ley 24.240).
+            Analiza profesionalmente la imagen de la factura adjunta y genera un informe estructurado en Markdown.
+            
+            Usa títulos claros (##) y viñetas. Estructura la respuesta EXACTAMENTE así:
 
-                ## 📋 Diagnóstico Rápido
-                * **Empresa / Servicio:** [Nombre]
-                * **Monto Total:** [Monto]
-                * **Puntos Críticos:** [Analiza ítems sospechosos, aumentos no notificados, cargos administrativos fijos o servicios no solicitados en viñetas claras]
+            ## 📋 Diagnóstico Rápido
+            * **Empresa / Servicio:** [Nombre]
+            * **Monto Total:** [Monto]
+            * **Puntos Críticos:** [Analiza ítems sospechosos, aumentos no notificados, cargos administrativos fijos o servicios no solicitados en viñetas claras]
 
-                ## ⚖️ Evaluación Legal
-                [Redacta aquí una evaluación legal profesional y concisa de 2 o 3 oraciones, indicando si hay fundamento para un reclamo basado en la Ley 24.240 u otras normativas argentinas aplicables]
+            ## ⚖️ Evaluación Legal
+            [Redacta aquí una evaluación legal profesional y concisa de 2 o 3 oraciones, indicando si hay fundamento para un reclamo basado en la Ley 24.240 u otras normativas argentinas aplicables]
 
-                ## 📨 Carta de Reclamo Formal
-                [Redacta una carta/email de reclamo formal completa, lista para copiar y pegar]
-                [Usa variables entre corchetes como [Nombre del Cliente], [Número de Cuenta]]
-                [Cita los artículos legales relevantes con firmeza y profesionalismo]
-                """
-                
-                # Invocación directa usando la nueva SDK oficial
-                response = client.models.generate_content(
-                    model='gemini-1.5-flash',
-                    contents=[image, prompt]
-                )
-                
+            ## 📨 Carta de Reclamo Formal
+            [Redacta una carta/email de reclamo formal completa, lista para copiar y pegar]
+            [Usa variables entre corchetes como [Nombre del Cliente], [Número de Cuenta]]
+            [Cita los artículos legales relevantes con firmeza y profesionalismo]
+            """
+
+            # Lista de modelos compatibles a intentar en orden automático
+            modelos_disponibles = [
+                'gemini-2.0-flash-exp',
+                'gemini-1.5-flash-8b',
+                'gemini-2.0-flash',
+                'gemini-1.5-pro'
+            ]
+            
+            response = None
+            ultimo_error = None
+
+            # Bucle anti-fallos para probar modelos hasta enganchar uno funcional
+            for mod in modelos_disponibles:
+                try:
+                    res = client.models.generate_content(
+                        model=mod,
+                        contents=[image, prompt]
+                    )
+                    if res and res.text:
+                        response = res
+                        break
+                except Exception as e:
+                    ultimo_error = e
+                    continue
+
+            if response:
                 st.balloons()
                 st.success("¡Auditoría completada con éxito!")
                 st.markdown("<br>", unsafe_allow_html=True)
@@ -172,11 +192,10 @@ if uploaded_file is not None:
                         <p>Copiá la <b>Carta de Reclamo Formal</b> generada arriba y enviala por mail a la casilla de Atención al Cliente o Legales de la empresa. ¡No olvides completar los datos entre corchetes!</p>
                     </div>
                 """, unsafe_allow_html=True)
-                
-            except Exception as e:
-                st.error(f"Ocurrió un error durante el análisis: {e}")
+            else:
+                st.error(f"No se pudo procesar la imagen con ningún modelo disponible. Detalle: {ultimo_error}")
 
-# Pie de página
+# Pie de página legal
 st.markdown("<br><br><br><hr>", unsafe_allow_html=True)
 st.markdown("""
     <p style='text-align: center; color: #65676b; font-size: 0.85rem;'>
