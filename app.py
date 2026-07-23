@@ -87,7 +87,7 @@ if uploaded_file is not None:
                 
                 # Llamada a Gemini 2.5 Flash usando el cliente oficial
                 response = client.models.generate_content(
-                    model='gemini-1.5-flash',
+                    model='gemini-2.0-flash',
                     contents=[image, prompt]
                 )
                 
