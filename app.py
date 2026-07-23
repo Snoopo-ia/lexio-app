@@ -1,7 +1,7 @@
 import os
 import streamlit as st
 from PIL import Image
-from google import genai
+import google.generativeai as genai
 
 # ---------------------------------------------------------
 # Configuración de la página (Estilo Lexio)
@@ -37,8 +37,8 @@ if not api_key:
     st.error("⚠️ Falta configurar la GEMINI_API_KEY en los Secretos del sistema.")
     st.stop()
 
-# Inicializar el cliente oficial
-client = genai.Client(api_key=api_key)
+# Configurar API
+genai.configure(api_key=api_key)
 
 # ---------------------------------------------------------
 # Interfaz de Usuario
@@ -81,11 +81,9 @@ if uploaded_file is not None:
                 Muestra la respuesta organizada con títulos claros en Markdown.
                 """
                 
-                # Modelo actualizado oficialmente
-                response = client.models.generate_content(
-                    model='gemini-1.5-flash',
-                    contents=[image, prompt]
-                )
+                # Inicializar modelo clásico 1.5 Flash
+                model = genai.GenerativeModel('gemini-1.5-flash')
+                response = model.generate_content([prompt, image])
                 
                 st.success("¡Análisis completado con éxito!")
                 st.markdown("---")
