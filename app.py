@@ -2,7 +2,6 @@ import os
 import streamlit as st
 from PIL import Image
 from google import genai
-from google.genai import types
 
 # ---------------------------------------------------------
 # Configuración de la página (Estilo Lexio)
@@ -13,7 +12,6 @@ st.set_page_config(
     layout="centered"
 )
 
-# Estilo CSS personalizado para apariencia moderna y sobria
 st.markdown("""
     <style>
     .main {
@@ -33,14 +31,13 @@ st.markdown("""
 # ---------------------------------------------------------
 # Conexión con la API de Gemini
 # ---------------------------------------------------------
-# Busca la API KEY guardada en los Secretos de la plataforma
 api_key = os.environ.get("GEMINI_API_KEY")
 
 if not api_key:
     st.error("⚠️ Falta configurar la GEMINI_API_KEY en los Secretos del sistema.")
     st.stop()
 
-# Inicializar el cliente oficial de Google GenAI
+# Inicializar el cliente oficial
 client = genai.Client(api_key=api_key)
 
 # ---------------------------------------------------------
@@ -64,7 +61,6 @@ if uploaded_file is not None:
     if st.button("🔍 Analizar Factura con Lexio"):
         with st.spinner("Lexio está auditando los ítems y la letra chica..."):
             try:
-                # Prompt estructurado para auditoría legal/financiera en Argentina
                 prompt = """
                 Actúa como un auditor experto en consumo y derecho del consumidor en Argentina (Ley 24.240).
                 Analiza la imagen de la factura adjunta y realiza lo siguiente:
@@ -85,7 +81,7 @@ if uploaded_file is not None:
                 Muestra la respuesta organizada con títulos claros en Markdown.
                 """
                 
-                # Llamada a Gemini 2.5 Flash usando el cliente oficial
+                # Modelo actualizado oficialmente
                 response = client.models.generate_content(
                     model='gemini-2.0-flash',
                     contents=[image, prompt]
@@ -101,6 +97,6 @@ if uploaded_file is not None:
             except Exception as e:
                 st.error(f"Ocurrió un error al procesar la imagen: {e}")
 
-# Pie de página legal / Descargo de responsabilidad
+# Pie de página legal
 st.markdown("<br><br><hr>", unsafe_allow_html=True)
 st.caption("⚠️ **Descargo de responsabilidad:** Lexio es un asistente impulsado por Inteligencia Artificial para la autogestión de reclamos. No presta asesoramiento jurídico profesional ni representación legal directa.")
