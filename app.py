@@ -1,7 +1,7 @@
 import os
 import streamlit as st
 from PIL import Image
-from google import genai
+import google.generativeai as genai
 
 # ---------------------------------------------------------
 # Configuración de la página y Estilo Premium (Dark Mode)
@@ -12,7 +12,6 @@ st.set_page_config(
     layout="centered"
 )
 
-# Inyección de CSS para diseño personalizado
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
@@ -88,16 +87,15 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ---------------------------------------------------------
-# Conexión con el Cliente Oficial de GenAI
+# Conexión con Gemini
 # ---------------------------------------------------------
 api_key = os.environ.get("GEMINI_API_KEY")
 
 if not api_key:
-    st.error("⚠️ Error de configuración: Falta la clave API de Gemini en los Secretos.")
+    st.error("⚠️ Falta configurar la GEMINI_API_KEY en los Secretos.")
     st.stop()
 
-# Inicializar cliente oficial
-client = genai.Client(api_key=api_key)
+genai.configure(api_key=api_key)
 
 # ---------------------------------------------------------
 # Interfaz de Usuario
@@ -131,7 +129,6 @@ if uploaded_file is not None:
     
     if analyze_btn:
         with st.spinner("Lexio está escaneando ítems, impuestos y letra chica..."):
-            
             prompt = """
             Actúa como un auditor experto en consumo y derecho del consumidor en Argentina (Ley 24.240).
             Analiza profesionalmente la imagen de la factura adjunta y genera un informe estructurado en Markdown.
@@ -152,38 +149,34 @@ if uploaded_file is not None:
             [Cita los artículos legales relevantes con firmeza y profesionalismo]
             """
 
-            # Lista de modelos prioritarios usando sus identificadores completos/válidos
-            modelos_a_probar = [
-                'models/gemini-2.0-flash',
-                'models/gemini-1.5-flash',
-                'models/gemini-1.5-flash-latest',
-                'gemini-2.0-flash',
-                'gemini-1.5-flash'
-            ]
-            
-            response = None
-            ultimo_error = None
+            # Auto-detección del modelo disponible en la cuenta
+            response_text = None
+            error_msg = ""
 
-            for mod in modelos_a_probar:
+            try:
+                # Intentamos listar modelos disponibles
+                modelos_validos = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
+            except Exception:
+                modelos_validos = ['models/gemini-1.5-flash', 'models/gemini-pro-vision']
+
+            for mod_name in modelos_validos:
                 try:
-                    res = client.models.generate_content(
-                        model=mod,
-                        contents=[prompt, image]
-                    )
+                    model = genai.GenerativeModel(mod_name)
+                    res = model.generate_content([prompt, image])
                     if res and res.text:
-                        response = res
+                        response_text = res.text
                         break
                 except Exception as e:
-                    ultimo_error = e
+                    error_msg = str(e)
                     continue
 
-            if response:
+            if response_text:
                 st.balloons()
                 st.success("¡Auditoría completada con éxito!")
                 st.markdown("<br>", unsafe_allow_html=True)
                 
                 with st.container():
-                    st.markdown(response.text)
+                    st.markdown(response_text)
                 
                 st.markdown("---")
                 st.markdown("""
@@ -193,7 +186,7 @@ if uploaded_file is not None:
                     </div>
                 """, unsafe_allow_html=True)
             else:
-                st.error(f"Ocurrió un problema de conexión con la API: {ultimo_error}")
+                st.error(f"Error al conectar con la API: {error_msg}")
 
 # Pie de página legal
 st.markdown("<br><br><br><hr>", unsafe_allow_html=True)
