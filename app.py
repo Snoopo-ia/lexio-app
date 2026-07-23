@@ -96,7 +96,7 @@ if not api_key:
     st.error("⚠️ Error de configuración: Falta la clave API de Gemini en los Secretos.")
     st.stop()
 
-# Inicializar cliente
+# Inicializar cliente oficial
 client = genai.Client(api_key=api_key)
 
 # ---------------------------------------------------------
@@ -152,23 +152,22 @@ if uploaded_file is not None:
             [Cita los artículos legales relevantes con firmeza y profesionalismo]
             """
 
-            # Lista de modelos compatibles a intentar en orden automático
+            # Modelos estándar oficiales
             modelos_disponibles = [
-                'gemini-2.0-flash-exp',
-                'gemini-1.5-flash-8b',
                 'gemini-2.0-flash',
-                'gemini-1.5-pro'
+                'gemini-2.5-flash',
+                'gemini-1.5-flash'
             ]
             
             response = None
             ultimo_error = None
 
-            # Bucle anti-fallos para probar modelos hasta enganchar uno funcional
+            # Bucle anti-fallos
             for mod in modelos_disponibles:
                 try:
                     res = client.models.generate_content(
                         model=mod,
-                        contents=[image, prompt]
+                        contents=[prompt, image]
                     )
                     if res and res.text:
                         response = res
@@ -193,7 +192,7 @@ if uploaded_file is not None:
                     </div>
                 """, unsafe_allow_html=True)
             else:
-                st.error(f"No se pudo procesar la imagen con ningún modelo disponible. Detalle: {ultimo_error}")
+                st.error(f"Ocurrió un problema de conexión con la API: {ultimo_error}")
 
 # Pie de página legal
 st.markdown("<br><br><br><hr>", unsafe_allow_html=True)
