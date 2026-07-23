@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>LEXIO — Auditoría inteligente de facturas</title>
+<meta name="description" content="Subí tu factura o comprobante. LEXIO la audita contra la Ley de Defensa del Consumidor y te arma el reclamo formal." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1B2430;
+    --ink-soft:#5B5548;
+    --paper:#EFE6D3;
+    --paper-light:#F8F3E7;
+    --paper-line: rgba(27,36,48,0.14);
+    --stamp-red:#B33A3A;
+    --gold:#C89B3C;
+    --green:#3F6B4F;
+    --radius: 10px;
+    --shadow: 0 10px 30px -12px rgba(27,36,48,0.35);
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'IBM Plex Sans', sans-serif;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3{
+    font-family:'Source Serif 4', serif;
+    font-weight:600;
+    margin:0;
+    color:var(--ink);
+  }
+  .mono{ font-family:'IBM Plex Mono', monospace; }
+
+  a{ color:inherit; }
+
+  /* ---------- Topbar ---------- */
+  .topbar{
+    background:var(--ink);
+    color:var(--paper-light);
+    padding:18px 20px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    position:sticky;
+    top:0;
+    z-index:20;
+  }
+  .wordmark{
+    font-family:'IBM Plex Mono', monospace;
+    font-weight:600;
+    letter-spacing:0.12em;
+    font-size:1.05rem;
+  }
+  .wordmark span{ color:var(--gold); }
+  .case-tag{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.72rem;
+    color:rgba(248,243,231,0.55);
+    letter-spacing:0.04em;
+  }
+
+  .wrap{
+    max-width:640px;
+    margin:0 auto;
+    padding:0 20px;
+  }
+
+  /* ---------- Hero ---------- */
+  .hero{ padding:52px 0 34px; }
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.75rem;
+    letter-spacing:0.08em;
+    color:var(--stamp-red);
+    text-transform:uppercase;
+    margin-bottom:10px;
+    display:block;
+  }
+  .hero h1{
+    font-size:2.15rem;
+    line-height:1.15;
+    letter-spacing:-0.01em;
+  }
+  .hero p.sub{
+    color:var(--ink-soft);
+    font-size:1.02rem;
+    margin-top:14px;
+    max-width:50ch;
+  }
+
+  /* ---------- Historial ---------- */
+  .history-toggle{
+    margin-top:20px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.78rem;
+    background:none;
+    border:1px solid var(--paper-line);
+    border-radius:100px;
+    padding:7px 14px;
+    cursor:pointer;
+    color:var(--ink-soft);
+  }
+  .history-toggle:hover{ border-color:var(--ink-soft); }
+  .history-panel{
+    display:none;
+    margin-top:14px;
+    border:1px solid var(--paper-line);
+    border-radius:var(--radius);
+    background:var(--paper-light);
+    padding:6px;
+  }
+  .history-panel.open{ display:block; }
+  .history-item{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+    padding:10px 12px;
+    border-radius:6px;
+    cursor:pointer;
+    font-size:0.88rem;
+  }
+  .history-item:hover{ background:rgba(27,36,48,0.05); }
+  .history-item + .history-item{ border-top:1px solid var(--paper-line); }
+  .history-item .h-name{ font-weight:600; }
+  .history-item .h-meta{ color:var(--ink-soft); font-size:0.78rem; font-family:'IBM Plex Mono', monospace; }
+  .history-empty{ padding:14px; color:var(--ink-soft); font-size:0.85rem; }
+  .history-clear{
+    display:block;
+    width:100%;
+    text-align:center;
+    background:none;
+    border:none;
+    padding:10px;
+    font-size:0.75rem;
+    color:var(--stamp-red);
+    cursor:pointer;
+    font-family:'IBM Plex Mono', monospace;
+  }
+
+  /* ---------- Upload ---------- */
+  .upload-zone{
+    margin-top:28px;
+    border:2px dashed var(--paper-line);
+    border-radius:var(--radius);
+    background:var(--paper-light);
+    padding:26px 20px;
+    text-align:center;
+    transition:border-color .15s ease, background .15s ease;
+  }
+  .upload-zone.drag{ border-color:var(--gold); background:#FBF6EA; }
+  .upload-zone input[type=file]{ display:none; }
+  .upload-btn{
+    display:inline-block;
+    background:var(--ink);
+    color:var(--paper-light);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.85rem;
+    padding:11px 20px;
+    border-radius:8px;
+    cursor:pointer;
+  }
+  .upload-hint{
+    margin-top:10px;
+    font-size:0.82rem;
+    color:var(--ink-soft);
+  }
+  .preview-wrap{ margin-top:16px; display:none; }
+  .preview-wrap.show{ display:block; }
+  .preview-wrap img{
+    max-width:100%;
+    max-height:340px;
+    border-radius:8px;
+    border:1px solid var(--paper-line);
+    display:block;
+    margin:0 auto;
+  }
+  .preview-file{
+    margin-top:8px;
+    font-size:0.8rem;
+    color:var(--ink-soft);
+    font-family:'IBM Plex Mono', monospace;
+  }
+
+  /* ---------- Consentimiento ---------- */
+  .consent{
+    margin-top:18px;
+    display:flex;
+    gap:10px;
+    align-items:flex-start;
+    font-size:0.85rem;
+    color:var(--ink-soft);
+  }
+  .consent input{ margin-top:3px; flex-shrink:0; }
+  .consent details{ margin-top:6px; }
+  .consent summary{ cursor:pointer; color:var(--ink); text-decoration:underline; font-size:0.82rem; }
+  .consent .details-body{ margin-top:8px; line-height:1.5; }
+
+  /* ---------- CTA ---------- */
+  .cta{
+    width:100%;
+    margin-top:20px;
+    background:var(--stamp-red);
+    color:#fff;
+    border:none;
+    border-radius:8px;
+    padding:16px;
+    font-family:'IBM Plex Sans', sans-serif;
+    font-weight:600;
+    font-size:1rem;
+    cursor:pointer;
+    transition:transform .12s ease, box-shadow .12s ease, opacity .12s ease;
+    box-shadow:0 6px 18px -6px rgba(179,58,58,0.55);
+  }
+  .cta:hover:not(:disabled){ transform:translateY(-1px); }
+  .cta:disabled{ opacity:0.45; cursor:not-allowed; box-shadow:none; }
+
+  .status-line{
+    margin-top:14px;
+    text-align:center;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.82rem;
+    color:var(--ink-soft);
+    display:none;
+  }
+  .status-line.show{ display:block; }
+
+  .error-box{
+    display:none;
+    margin-top:16px;
+    background:#FBEAEA;
+    border:1px solid var(--stamp-red);
+    color:#7a2626;
+    padding:14px 16px;
+    border-radius:8px;
+    font-size:0.9rem;
+  }
+  .error-box.show{ display:block; }
+
+  /* ---------- Resultados ---------- */
+  .results{ display:none; padding:10px 0 60px; }
+  .results.show{ display:block; }
+
+  .sheet{
+    position:relative;
+    background:var(--paper-light);
+    border:1px solid var(--paper-line);
+    border-radius:var(--radius);
+    padding:24px 22px;
+    margin-top:22px;
+    box-shadow:var(--shadow);
+  }
+  .sheet .eyebrow{ margin-bottom:8px; }
+  .sheet h2{ font-size:1.35rem; margin-bottom:14px; }
+
+  /* Sello */
+  .stamp{
+    position:absolute;
+    top:-14px;
+    right:16px;
+    width:104px;
+    height:104px;
+    border-radius:50%;
+    border:3px solid var(--stamp-color, var(--stamp-red));
+    color:var(--stamp-color, var(--stamp-red));
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    transform:rotate(-9deg) scale(0.4);
+    opacity:0;
+    background:rgba(248,243,231,0.92);
+    font-family:'IBM Plex Mono', monospace;
+    font-weight:600;
+    font-size:0.68rem;
+    letter-spacing:0.03em;
+    line-height:1.25;
+    padding:6px;
+    animation:stampdown .35s cubic-bezier(.2,1.4,.4,1) forwards;
+    animation-delay:.15s;
+  }
+  @keyframes stampdown{
+    0%{ transform:rotate(-9deg) scale(2); opacity:0; }
+    70%{ opacity:1; }
+    100%{ transform:rotate(-9deg) scale(1); opacity:1; }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .stamp{ animation:none; opacity:1; transform:rotate(-9deg) scale(1); }
+  }
+
+  .kv{ display:flex; justify-content:space-between; gap:14px; padding:9px 0; border-top:1px solid var(--paper-line); font-size:0.92rem; }
+  .kv:first-of-type{ border-top:none; }
+  .kv .k{ color:var(--ink-soft); }
+  .kv .v{ font-weight:600; text-align:right; }
+
+  .criticos{ margin-top:14px; padding-left:0; list-style:none; }
+  .criticos li{
+    position:relative;
+    padding:8px 0 8px 20px;
+    font-size:0.92rem;
+    border-top:1px solid var(--paper-line);
+  }
+  .criticos li:first-child{ border-top:none; }
+  .criticos li::before{
+    content:"▸";
+    position:absolute;
+    left:0;
+    color:var(--stamp-red);
+  }
+  .criticos.empty li::before{ color:var(--green); content:"✓"; }
+  .criticos.empty li{ color:var(--ink-soft); }
+
+  .legal-text{ font-size:0.95rem; line-height:1.6; color:var(--ink); }
+
+  .carta-box{
+    margin-top:14px;
+    background:var(--paper);
+    border:1px solid var(--paper-line);
+    border-radius:8px;
+    padding:16px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.82rem;
+    line-height:1.6;
+    white-space:pre-wrap;
+    max-height:340px;
+    overflow-y:auto;
+  }
+
+  .actions{ display:flex; gap:10px; margin-top:14px; flex-wrap:wrap; }
+  .btn-secondary{
+    flex:1;
+    min-width:140px;
+    background:var(--ink);
+    color:var(--paper-light);
+    border:none;
+    border-radius:8px;
+    padding:12px 14px;
+    font-size:0.85rem;
+    font-weight:600;
+    cursor:pointer;
+    font-family:'IBM Plex Sans', sans-serif;
+  }
+  .btn-secondary.ghost{
+    background:none;
+    color:var(--ink);
+    border:1px solid var(--paper-line);
+  }
+
+  .result-actions{
+    display:flex;
+    gap:10px;
+    margin-top:26px;
+    flex-wrap:wrap;
+  }
+  .result-actions button{ flex:1; min-width:150px; }
+
+  /* ---------- Footer ---------- */
+  footer{
+    background:var(--ink);
+    color:rgba(248,243,231,0.65);
+    padding:34px 20px 40px;
+    margin-top:20px;
+  }
+  footer .wrap{ font-size:0.82rem; line-height:1.6; }
+  footer strong{ color:var(--paper-light); }
+  footer .legal-note{ margin-top:10px; }
+
+  /* ---------- Print ---------- */
+  @media print{
+    .topbar, .hero, footer, .result-actions, .history-toggle, .history-panel{ display:none !important; }
+    body{ background:#fff; }
+    .sheet{ box-shadow:none; border:1px solid #999; break-inside:avoid; }
+  }
+
+  @media (max-width:480px){
+    .hero h1{ font-size:1.7rem; }
+    .stamp{ width:86px; height:86px; font-size:0.6rem; right:10px; }
+  }
+
+  :focus-visible{ outline:2px solid var(--gold); outline-offset:2px; }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wordmark">LEX<span>IO</span></div>
+  <div class="case-tag" id="caseTag"></div>
+</header>
+
+<main class="wrap">
+
+  <section class="hero">
+    <span class="eyebrow">Defensa del consumidor · Argentina</span>
+    <h1>La letra chica, auditada en minutos.</h1>
+    <p class="sub">Subí tu factura o comprobante. LEXIO revisa los cargos contra la Ley 24.240 y te arma el reclamo, listo para copiar y enviar.</p>
+
+    <button class="history-toggle" id="historyToggle" type="button">📂 Ver auditorías anteriores</button>
+    <div class="history-panel" id="historyPanel"></div>
+
+    <div class="upload-zone" id="uploadZone">
+      <input type="file" id="fileInput" accept="image/jpeg,image/png" />
+      <label class="upload-btn" for="fileInput">Elegir foto o archivo</label>
+      <p class="upload-hint">JPG o PNG · se optimiza automáticamente antes de enviarse · nada queda en nuestros servidores</p>
+      <div class="preview-wrap" id="previewWrap">
+        <img id="previewImg" alt="Vista previa del comprobante" />
+        <div class="preview-file" id="previewFile"></div>
+      </div>
+    </div>
+
+    <label class="consent">
+      <input type="checkbox" id="consentCheck" />
+      <span>
+        Acepto que la imagen se procese con IA (Google Gemini) únicamente para generar este informe.
+        <details>
+          <summary>Ver qué pasa con mis datos</summary>
+          <div class="details-body">
+            La imagen se envía a la API de Gemini solo para generar el análisis y no se guarda en ningún servidor de LEXIO.
+            El informe resultante se guarda únicamente en este dispositivo (localStorage de tu navegador), no en la nube.
+            Este informe es orientación general y no reemplaza el asesoramiento de un abogado matriculado.
+          </div>
+        </details>
+      </span>
+    </label>
+
+    <button class="cta" id="analyzeBtn" disabled>🔍 Iniciar auditoría</button>
+    <div class="status-line" id="statusLine"></div>
+    <div class="error-box" id="errorBox"></div>
+  </section>
+
+  <section class="results" id="results"></section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <strong>Descargo de responsabilidad.</strong>
+    <p class="legal-note">LEXIO es un asistente impulsado por inteligencia artificial para la autogestión de reclamos de consumo. No presta asesoramiento jurídico profesional ni representación legal. Ante montos importantes o casos complejos, recomendamos consultar con un abogado matriculado o con la oficina de Defensa del Consumidor de tu jurisdicción.</p>
+    <p class="legal-note">Las imágenes que subís se procesan a través de la API de Gemini (Google) exclusivamente para generar este informe y no se almacenan en servidores de LEXIO. El historial de auditorías se guarda solo en tu propio navegador.</p>
+  </div>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+
+  const $ = (id) => document.getElementById(id);
+  const fileInput = $("fileInput");
+  const uploadZone = $("uploadZone");
+  const previewWrap = $("previewWrap");
+  const previewImg = $("previewImg");
+  const previewFile = $("previewFile");
+  const consentCheck = $("consentCheck");
+  const analyzeBtn = $("analyzeBtn");
+  const statusLine = $("statusLine");
+  const errorBox = $("errorBox");
+  const resultsEl = $("results");
+  const historyToggle = $("historyToggle");
+  const historyPanel = $("historyPanel");
+  const caseTag = $("caseTag");
+
+  const HISTORY_KEY = "lexio_historial_v1";
+  const MAX_HISTORY = 20;
+
+  let currentImageBase64 = null;
+  let currentMimeType = null;
+
+  // Tag de expediente, solo detalle de marca (no persiste nada real)
+  caseTag.textContent = "EXP-" + new Date().getFullYear() + "-AR";
+
+  // ---------- Carga y compresión de imagen ----------
+  function resizeImage(file, maxDim, quality){
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const reader = new FileReader();
+      reader.onload = (e) => { img.src = e.target.result; };
+      reader.onerror = reject;
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > height && width > maxDim) {
+          height = Math.round(height * (maxDim / width)); width = maxDim;
+        } else if (height > maxDim) {
+          width = Math.round(width * (maxDim / height)); height = maxDim;
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = width; canvas.height = height;
+        canvas.getContext("2d").drawImage(img, 0, 0, width, height);
+        const dataUrl = canvas.toDataURL("image/jpeg", quality);
+        resolve(dataUrl);
+      };
+      img.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  fileInput.addEventListener("change", async () => {
+    const file = fileInput.files[0];
+    if (!file) return;
+    try {
+      const dataUrl = await resizeImage(file, 1600, 0.85);
+      currentImageBase64 = dataUrl.split(",")[1];
+      currentMimeType = "image/jpeg";
+      previewImg.src = dataUrl;
+      previewWrap.classList.add("show");
+      previewFile.textContent = file.name + " · optimizada para envío";
+      updateCtaState();
+    } catch (err) {
+      showError("No pudimos leer esa imagen. Probá con otra foto.");
+    }
+  });
+
+  ["dragover","dragleave","drop"].forEach(evt => {
+    uploadZone.addEventListener(evt, (e) => {
+      e.preventDefault();
+      uploadZone.classList.toggle("drag", evt === "dragover");
+      if (evt === "drop" && e.dataTransfer.files[0]) {
+        fileInput.files = e.dataTransfer.files;
+        fileInput.dispatchEvent(new Event("change"));
+      }
+    });
+  });
+
+  consentCheck.addEventListener("change", updateCtaState);
+  function updateCtaState(){
+    analyzeBtn.disabled = !(currentImageBase64 && consentCheck.checked);
+  }
+
+  // ---------- Análisis ----------
+  analyzeBtn.addEventListener("click", async () => {
+    hideError();
+    setLoading(true);
+    try {
+      const res = await fetch("/.netlify/functions/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageBase64: currentImageBase64, mimeType: currentMimeType })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Error desconocido.");
+      renderResults(data);
+      saveToHistory(data);
+      renderHistory();
+    } catch (err) {
+      showError(err.message || "No pudimos completar la auditoría. Probá de nuevo en unos minutos.");
+    } finally {
+      setLoading(false);
+    }
+  });
+
+  function setLoading(isLoading){
+    analyzeBtn.disabled = isLoading || !(currentImageBase64 && consentCheck.checked);
+    statusLine.classList.toggle("show", isLoading);
+    statusLine.textContent = isLoading ? "Auditando expediente… cruzando ítems contra la Ley 24.240" : "";
+  }
+
+  function showError(msg){ errorBox.textContent = "⚠️ " + msg; errorBox.classList.add("show"); }
+  function hideError(){ errorBox.classList.remove("show"); errorBox.textContent = ""; }
+
+  // ---------- Render de resultados ----------
+  function riskColor(cat){
+    if (cat === "alto") return "var(--stamp-red)";
+    if (cat === "medio") return "var(--gold)";
+    return "var(--green)";
+  }
+  function riskLabel(cat){
+    return cat === "alto" ? "RIESGO ALTO" : cat === "medio" ? "RIESGO MEDIO" : "RIESGO BAJO";
+  }
+
+  function renderResults(data){
+    const criticos = (data.puntos_criticos && data.puntos_criticos.length)
+      ? data.puntos_criticos.map(c => `<li>${escapeHtml(c)}</li>`).join("")
+      : `<li>No se detectaron ítems irregulares a simple vista.</li>`;
+    const emptyClass = (data.puntos_criticos && data.puntos_criticos.length) ? "" : "empty";
+
+    resultsEl.innerHTML = `
+      <div class="sheet">
+        <div class="stamp" style="--stamp-color:${riskColor(data.riesgo_categoria)}">${riskLabel(data.riesgo_categoria)}<br>${data.nivel_riesgo}/100</div>
+        <span class="eyebrow">Hoja 1 de 3 · Diagnóstico</span>
+        <h2>Diagnóstico rápido</h2>
+        <div class="kv"><span class="k">Empresa / servicio</span><span class="v">${escapeHtml(data.empresa)}</span></div>
+        <div class="kv"><span class="k">Monto total</span><span class="v">${escapeHtml(data.monto_total)}</span></div>
+        <ul class="criticos ${emptyClass}">${criticos}</ul>
+      </div>
+
+      <div class="sheet">
+        <span class="eyebrow">Hoja 2 de 3 · Fundamento</span>
+        <h2>Evaluación legal</h2>
+        <p class="legal-text">${escapeHtml(data.evaluacion_legal)}</p>
+      </div>
+
+      <div class="sheet">
+        <span class="eyebrow">Hoja 3 de 3 · Reclamo</span>
+        <h2>Carta de reclamo formal</h2>
+        <div class="carta-box" id="cartaBox">${escapeHtml(data.carta_reclamo)}</div>
+        <div class="actions">
+          <button class="btn-secondary" id="copyBtn" type="button">Copiar carta</button>
+          <button class="btn-secondary ghost" id="downloadTxtBtn" type="button">Descargar .txt</button>
+        </div>
+      </div>
+
+      <div class="result-actions">
+        <button class="btn-secondary" id="pdfBtn" type="button">📄 Descargar informe (PDF)</button>
+        <button class="btn-secondary ghost" id="resetBtn" type="button">Nueva auditoría</button>
+      </div>
+    `;
+    resultsEl.classList.add("show");
+    resultsEl.scrollIntoView({ behavior: "smooth", block: "start" });
+
+    $("copyBtn").addEventListener("click", () => {
+      navigator.clipboard.writeText(data.carta_reclamo).then(() => {
+        $("copyBtn").textContent = "¡Copiada!";
+        setTimeout(() => $("copyBtn").textContent = "Copiar carta", 1800);
+      });
+    });
+    $("downloadTxtBtn").addEventListener("click", () => {
+      const blob = new Blob([data.carta_reclamo], { type: "text/plain" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "reclamo-" + slug(data.empresa) + ".txt";
+      a.click();
+    });
+    $("pdfBtn").addEventListener("click", () => window.print());
+    $("resetBtn").addEventListener("click", resetForm);
+  }
+
+  function resetForm(){
+    fileInput.value = "";
+    currentImageBase64 = null;
+    currentMimeType = null;
+    previewWrap.classList.remove("show");
+    consentCheck.checked = false;
+    resultsEl.classList.remove("show");
+    resultsEl.innerHTML = "";
+    updateCtaState();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  // ---------- Historial local ----------
+  function saveToHistory(data){
+    const list = getHistory();
+    list.unshift({
+      id: Date.now(),
+      fecha: new Date().toLocaleDateString("es-AR"),
+      empresa: data.empresa,
+      monto_total: data.monto_total,
+      riesgo_categoria: data.riesgo_categoria,
+      nivel_riesgo: data.nivel_riesgo,
+      data
+    });
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(list.slice(0, MAX_HISTORY)));
+  }
+  function getHistory(){
+    try { return JSON.parse(localStorage.getItem(HISTORY_KEY)) || []; }
+    catch { return []; }
+  }
+  function renderHistory(){
+    const list = getHistory();
+    if (!list.length){
+      historyPanel.innerHTML = `<div class="history-empty">Todavía no hay auditorías guardadas en este dispositivo.</div>`;
+      return;
+    }
+    historyPanel.innerHTML = list.map(item => `
+      <div class="history-item" data-id="${item.id}">
+        <div>
+          <div class="h-name">${escapeHtml(item.empresa)}</div>
+          <div class="h-meta">${item.fecha} · ${escapeHtml(item.monto_total)} · riesgo ${item.riesgo_categoria}</div>
+        </div>
+        <span class="mono">→</span>
+      </div>
+    `).join("") + `<button class="history-clear" id="clearHistoryBtn" type="button">Borrar historial de este dispositivo</button>`;
+
+    historyPanel.querySelectorAll(".history-item").forEach(el => {
+      el.addEventListener("click", () => {
+        const item = list.find(i => String(i.id) === el.dataset.id);
+        if (item) { renderResults(item.data); historyPanel.classList.remove("open"); }
+      });
+    });
+    $("clearHistoryBtn").addEventListener("click", () => {
+      if (confirm("¿Borrar todo el historial guardado en este dispositivo?")) {
+        localStorage.removeItem(HISTORY_KEY);
+        renderHistory();
+      }
+    });
+  }
+  historyToggle.addEventListener("click", () => {
+    historyPanel.classList.toggle("open");
+    if (historyPanel.classList.contains("open")) renderHistory();
+  });
+  renderHistory();
+
+  // ---------- Utils ----------
+  function escapeHtml(str){
+    return String(str ?? "").replace(/[&<>"']/g, (c) => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+    }[c]));
+  }
+  function slug(str){
+    return String(str ?? "reclamo").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/(^-|-$)/g,"");
+  }
+})();
+</script>
+
+</body>
+</html>
