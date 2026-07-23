@@ -83,7 +83,7 @@ if uploaded_file is not None:
                 
                 # Modelo actualizado oficialmente
                 response = client.models.generate_content(
-                    model='gemini-2.0-flash',
+                    model='gemini-1.5-flash',
                     contents=[image, prompt]
                 )
                 
