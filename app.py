@@ -152,18 +152,19 @@ if uploaded_file is not None:
             [Cita los artículos legales relevantes con firmeza y profesionalismo]
             """
 
-            # Modelos estándar oficiales
-            modelos_disponibles = [
+            # Lista de modelos prioritarios usando sus identificadores completos/válidos
+            modelos_a_probar = [
+                'models/gemini-2.0-flash',
+                'models/gemini-1.5-flash',
+                'models/gemini-1.5-flash-latest',
                 'gemini-2.0-flash',
-                'gemini-2.5-flash',
                 'gemini-1.5-flash'
             ]
             
             response = None
             ultimo_error = None
 
-            # Bucle anti-fallos
-            for mod in modelos_disponibles:
+            for mod in modelos_a_probar:
                 try:
                     res = client.models.generate_content(
                         model=mod,
