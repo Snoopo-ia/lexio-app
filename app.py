@@ -106,8 +106,9 @@ if not api_key:
     st.error("⚠️ Error de configuración: Falta la clave API de Gemini.")
     st.stop()
 
-# Configurar API
-genai.configure(api_key=api_key)
+# Configurar API forzando la versión v1 de producción
+genai.configure(api_key=api_key, client_options={"api_version": "v1"})
+
 
 # ---------------------------------------------------------
 # Interfaz de Usuario - Cabecera Estilizada
@@ -172,7 +173,7 @@ if uploaded_file is not None:
                 """
                 
                 # Nombre de versión estable garantizada
-                model = genai.GenerativeModel('gemini-1.5-flash-002')
+                model = genai.GenerativeModel('gemini-1.5-flash')
                 response = model.generate_content([prompt, image])
                 
                 # Mostrar resultados con éxito estilizado
