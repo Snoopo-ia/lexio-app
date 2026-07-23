@@ -82,7 +82,8 @@ if uploaded_file is not None:
                 """
                 
                 # Inicializar modelo clásico 1.5 Flash
-                model = genai.GenerativeModel('gemini-1.5-flash')
+                model = genai.GenerativeModel('gemini-1.5-flash-latest')
+
                 response = model.generate_content([prompt, image])
                 
                 st.success("¡Análisis completado con éxito!")
